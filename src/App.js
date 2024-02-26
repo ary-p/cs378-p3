@@ -1,4 +1,5 @@
 import MenuItem from './components/MenuItem';
+import React, {useState} from 'react';
 
 import 'bootstrap/dist/css/bootstrap.min.css'; // This imports bootstrap css styles. You can use bootstrap or your own classes by using the className attribute in your elements.
 import './App.css';
@@ -80,6 +81,67 @@ const menuItems = [
 
 
 function App() {
+  //Used Chat GPT to understand how to initialize and increment counts for state
+  //Conversation link - https://chat.openai.com/c/ed859418-273f-480a-aeed-9c9728691a5d
+  const[count, setCount] = useState(() => {
+    const initialState = {};
+    menuItems.forEach(item => {
+      initialState[item.id] = 0; 
+    })
+    return initialState;
+  });
+
+  const addItem = (id) => {
+    setCount(prev => ({
+      ...prev,
+      [id]: prev[id] + 1
+    }));
+  }
+  
+  const removeItem = (id) => {
+    setCount(prev => {
+      const new_count = prev[id] > 0 ? prev[id] - 1 : prev[id];
+      return{
+        ...prev,
+        [id]: new_count
+      }
+      
+    });
+  }
+
+  const total = () => {
+    let total_amount = 0;
+    menuItems.forEach(item => {
+      total_amount += count[item.id] * item.price;
+    });
+    return total_amount;
+  }
+
+  const order = () => {
+    const orderedItems = menuItems.filter(item => count[item.id] > 0);
+    if (orderedItems.length == 0) {
+      alert("No items in cart");
+    }
+    else {
+      let message = "";
+      orderedItems.forEach(item => {
+        message += ("Item: " + item.title + " Quantity: " + count[item.id])
+      })
+      alert('Order placed! ' + message);
+    }
+  }
+
+  const clear_all = () => {
+    setCount(() => {
+      const clearedState = {};
+      menuItems.forEach(item => {
+        clearedState[item.id] = 0;
+      });
+      return clearedState;
+    });
+
+  }
+
   return (
     <div>
       <h1>Takizme</h1>
@@ -87,13 +149,24 @@ function App() {
       <h2>Food that touches the soul</h2>
       <div className="menu">
         {menuItems.map((item) => (
-           <MenuItem title={item.title} description={item.description} imageName={item.imageName} price={item.price} /> 
+           <MenuItem title={item.title} description={item.description} imageName={item.imageName} price={item.price} quantity={count[item.id]} addItem={() => addItem(item.id)} removeItem={() => removeItem(item.id)}/> 
         ))}
-        
-       
+      </div>
+      <div className="row">
+        <div class = "col-2">
+          <h5 class = 'subtotal'>Subtotal ${total().toFixed(2)}</h5>
+        </div>
+        <div class = "col-2">
+            <button onClick={order} type = "button">Order</button>
+        </div>
+
+        <div class = "col-2">
+            <button onClick={clear_all} type = "button">Clear all</button>
+        </div>
       </div>
     </div>
   );
 }
+
 
 export default App;
